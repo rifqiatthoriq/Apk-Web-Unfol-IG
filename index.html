@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IG Unfollow Checker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen bg-zinc-900 text-zinc-200 antialiased">
+
+  <main class="max-w-5xl mx-auto px-4 py-10">
+
+    <!-- ===== HEADER ===== -->
+    <header class="text-center mb-10">
+      <h1 class="text-4xl sm:text-5xl font-extrabold neon-text">IG Unfollow Checker</h1>
+      <p class="mt-3 text-zinc-400 max-w-xl mx-auto">
+        Periksa akun yang tidak mengikuti balik Anda. Seluruh data diproses secara langsung
+        di dalam peramban (browser) Anda, sehingga file tidak dikirim ke server mana pun.
+        Menjamin privasi 100% aman.
+      </p>
+
+      <!-- Fitur 1: Safe badge -->
+      <div class="mt-4 inline-flex items-center rounded-full border border-violet-500/40 bg-violet-500/10
+                  px-4 py-1.5 text-xs sm:text-sm text-violet-200">
+        🔒 Pemrosesan 100% Lokal (Client-Side) · File Anda Tidak Dikirim ke Server
+      </div>
+    </header>
+
+    <!-- ===== AREA UPLOAD ===== -->
+    <section class="grid md:grid-cols-2 gap-4">
+      <label id="dropFollowers" class="dropzone" for="inputFollowers">
+        <input id="inputFollowers" type="file" accept=".json,application/json" class="hidden">
+        <span class="font-semibold text-zinc-100">followers_1.json</span>
+        <span id="statusFollowers" class="text-sm text-zinc-400 mt-1">
+          Seret file ke sini atau klik untuk memilih file
+        </span>
+      </label>
+
+      <label id="dropFollowing" class="dropzone" for="inputFollowing">
+        <input id="inputFollowing" type="file" accept=".json,application/json" class="hidden">
+        <span class="font-semibold text-zinc-100">following.json</span>
+        <span id="statusFollowing" class="text-sm text-zinc-400 mt-1">
+          Seret file ke sini atau klik untuk memilih file
+        </span>
+      </label>
+    </section>
+
+    <!-- Fitur 2: tombol aksi (Periksa + Reset) -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <button id="btnAnalyze" type="button" disabled class="btn-neon">Periksa Sekarang</button>
+      <button id="btnReset" type="button"
+              class="rounded-xl border border-zinc-600 bg-zinc-800 px-6 py-3 font-semibold text-zinc-300
+                     transition hover:bg-zinc-700 hover:text-white">
+        Bersihkan Data
+      </button>
+    </div>
+
+    <!-- Info riwayat tersimpan (muncul hanya jika ada riwayat) -->
+    <p id="historyInfo" class="hidden mt-3 text-center text-xs text-zinc-500">
+      <span id="historyText"></span>
+      <button id="btnClearHistory" type="button" class="ml-1 underline hover:text-zinc-300">Hapus riwayat</button>
+    </p>
+
+    <!-- ===== HASIL ===== -->
+    <section id="results" class="hidden mt-10">
+
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        <div class="stat-card">
+          <div id="countFollowers" class="text-2xl font-bold">0</div>
+          <div class="text-xs text-zinc-400">Pengikut</div>
+        </div>
+        <div class="stat-card">
+          <div id="countFollowing" class="text-2xl font-bold">0</div>
+          <div class="text-xs text-zinc-400">Diikuti</div>
+        </div>
+        <div class="stat-card stat-card-accent">
+          <div id="countNotBack" class="text-2xl font-bold neon-text">0</div>
+          <div class="text-xs text-zinc-400">Tidak Mengikuti Balik</div>
+        </div>
+      </div>
+
+      <!-- Panel diagnosa (diisi app.js) -->
+      <div id="diagBox" class="mb-4 rounded-xl border border-zinc-700 bg-zinc-800/60 p-3 text-xs text-zinc-400"></div>
+
+      <!-- Fitur 4: unfollow baru sejak analisis terakhir (muncul hanya jika ada data) -->
+      <div id="newUnfollowBox" class="hidden mb-5 rounded-xl border border-rose-500/40 bg-rose-500/10 p-4">
+        <p id="newUnfollowTitle" class="font-semibold text-rose-300"></p>
+        <p id="newUnfollowNote" class="mt-1 text-xs text-zinc-400"></p>
+        <div id="newUnfollowList" class="thin-scroll mt-3 flex max-h-40 flex-wrap gap-2 overflow-y-auto"></div>
+      </div>
+
+      <!-- Fitur 3: pencarian + sortir -->
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row">
+        <input id="searchInput" type="search" placeholder="Cari username..."
+               class="w-full sm:flex-1 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3
+                      outline-none placeholder-zinc-500
+                      focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/30">
+        <select id="sortSelect"
+                class="w-full sm:w-48 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3
+                       outline-none focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/30">
+          <option value="az">Urutkan: A-Z</option>
+          <option value="za">Urutkan: Z-A</option>
+        </select>
+      </div>
+
+      <div id="resultList"
+           class="thin-scroll max-h-[60vh] overflow-y-auto pr-1
+                  grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+      <p id="emptyMessage" class="hidden text-center text-zinc-400 py-8">Tidak ada username yang cocok.</p>
+      <p id="allGoodMessage" class="hidden text-center text-zinc-300 py-8">
+        Semua akun yang Anda ikuti sudah mengikuti balik Anda. 🎉
+      </p>
+
+      <!-- Catatan Penting -->
+      <aside id="infoNote" class="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-zinc-300">
+        <p class="font-semibold text-amber-300 mb-1">Catatan Penting:</p>
+        <p>
+          Jika Anda menemukan akun yang tidak dapat dibuka atau halamannya hilang saat
+          tombol diklik, hal tersebut umumnya disebabkan karena pengguna tersebut sedang
+          menonaktifkan (deactivate) akunnya sementara waktu.
+        </p>
+        <p class="mt-2 text-zinc-400">
+          Perlu diketahui bahwa halaman yang tidak ditemukan juga dapat terjadi jika akun
+          telah dihapus secara permanen, pengguna mengubah username mereka, atau akun Anda
+          dibatasi/diblokir oleh pengguna tersebut. Aplikasi ini murni membandingkan daftar
+          data dokumen Anda secara akurat; akun yang melakukan unfollow secara normal akan
+          tetap menampilkan profil Instagram mereka dengan baik.
+        </p>
+      </aside>
+    </section>
+
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
